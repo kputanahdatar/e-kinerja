@@ -8,7 +8,7 @@ async function call(a,p){ldOn();
   try{
     let res;
     try{res=await fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({a:a,t:T,p:p||{}})})}
-    catch(e){throw new Error('Tidak dapat terhubung ke server. Periksa API_URL di konfigurasi.js, akses Anyone, dan koneksi internet.')}
+    catch(e){throw new Error('Tidak dapat terhubung ke server. Buka tes-koneksi.html untuk mengetahui penyebabnya.')}
     let r;
     try{r=await res.json()}catch(e){throw new Error('Respons server tidak valid. Pastikan Api.gs sudah di-deploy sebagai New version.')}
     if(!r.ok)throw new Error(r.error);
@@ -24,11 +24,13 @@ const topbar=t=>`<div class=top><div><b class=b>E-</b><b class=y>KINERJA</b> &nb
 
 const PAGE=document.body.getAttribute('data-page');
 const HOME={admin:'admin.html',user:'pengguna.html'};
+const PWA=`type=password autocomplete="new-password" readonly onfocus="this.removeAttribute('readonly')" oninput="this.dataset.k=1"`;
+function clearPw(){document.querySelectorAll('input[type=password]').forEach(el=>{[0,150,600].forEach(ms=>setTimeout(()=>{if(!el.dataset.k)el.value=''},ms))})}
 function showLogin(){
   $('#app').innerHTML=`<div class=login><h1><span class=b>E-</span><span class=y>KINERJA</span></h1><p>Silakan login dengan akun Anda</p>
-  <label>Username (Admin) / NIP (Pengguna)</label><input id=lu autofocus><label>Password</label><input id=lp type=password>
+  <label>Username (Admin) / NIP (Pengguna)</label><input id=lu autofocus autocomplete="off"><label>Password</label><input id=lp ${PWA}>
   <button class=btn id=lb onclick=doLogin()>Log In</button></div>`;
-  $('#lp').onkeydown=function(e){if(e.key=='Enter'){doLogin()}};
+  $('#lp').onkeydown=function(e){if(e.key=='Enter'){doLogin()}};clearPw();
 }
 async function doLogin(){const b=$('#lb');b.disabled=true;b.textContent='Memproses...';
   try{const r=await call('login',{u:$('#lu').value,p:$('#lp').value});
@@ -73,19 +75,19 @@ function pRa(){const e=D.ra.find(r=>r.id==EID)||{},yl=yrList(),ty=e.tahun||FRA.t
 function copyRa(){run(async()=>{const f=$('#cf').value,t=$('#ct').value;if(f==t)throw new Error('Tahun asal dan tahun tujuan tidak boleh sama');const n=await call('a_copyRa',{from:f,to:t});D=await call('a_data');FRA.t=t;renderAdmin();toast(n+' rencana aksi disalin ke tahun '+t,true)})}
 
 function pUsr(){const e=D.usr.find(u=>u.id==EID)||{ra:[]};
-  $('#pane').innerHTML=`<h3>${EID?'Edit':'Tambah'} Pengguna</h3><div class=row><input id=f1 placeholder="Nama lengkap" value="${esc(e.nama)}"><input id=f2 placeholder="NIP (dipakai untuk login)" value="${esc(e.nip)}"><input id=f3 type=password placeholder="${EID?'Password baru (kosongkan jika tidak diubah)':'Password'}"></div>
+  $('#pane').innerHTML=`<h3>${EID?'Edit':'Tambah'} Pengguna</h3><div class=row><input id=f1 placeholder="Nama lengkap" value="${esc(e.nama)}"><input id=f2 autocomplete="off" placeholder="NIP (dipakai untuk login)" value="${esc(e.nip)}"><input id=f3 ${PWA} placeholder="${EID?'Password baru (kosongkan jika tidak diubah)':'Password'}"></div>
   <div class=row><div><span class=lbl>Jabatan</span><select id=f4 onchange="SELRA=new Set();drawRa()">${opts(D.jab,e.jabatanId,'-- Pilih Jabatan (satu) --')}</select></div><div style="flex:0 0 140px;min-width:120px"><span class=lbl>Periode Tahun</span><select id=f5 onchange="drawRa()">${yrList().map(y=>`<option ${y==today().slice(0,4)?'selected':''}>${y}</option>`).join('')}</select></div></div>
   <b style="font-size:14px">Rencana Aksi (boleh lebih dari satu)</b><div class=chk id=rach></div>
   <div class=muted style="font-size:12px;margin-bottom:10px">Pilihan tersimpan untuk semua tahun. Jika pada suatu tahun tidak ada yang dicentang, pengguna otomatis mendapat semua rencana aksi jabatannya pada tahun itu.</div>
   <button class=btn onclick="saveUser()">Simpan</button> ${EID?cancel:''}
   <div class=tw style="margin-top:16px"><table><tr><th>Nama</th><th>NIP</th><th>Jabatan</th><th>Rencana Aksi</th><th width=150>Aksi</th></tr>${D.usr.map(u=>`<tr><td>${esc(u.nama)}</td><td>${esc(u.nip)}</td><td>${esc(jn(u.jabatanId))}</td><td>${u.ra.map(i=>esc(rnn(i))).filter(Boolean).join('<br>')||'-'}</td><td><button class="btn sm" onclick="EID='${u.id}';renderAdmin()">Edit</button> <button class="btn sm red" onclick="confirm('Hapus pengguna beserta laporannya?')&&sv('a_delUser',{id:'${u.id}'})">Hapus</button></td></tr>`).join('')||'<tr><td colspan=5 class=muted>Belum ada pengguna</td></tr>'}</table></div>`;
-  SELRA=new Set(e.ra);drawRa()}
+  SELRA=new Set(e.ra);drawRa();clearPw()}
 function drawRa(){const j=$('#f4').value,y=$('#f5').value,l=D.ra.filter(r=>r.jabatanId==j&&r.tahun==y);
   $('#rach').innerHTML=!j?'<span class=muted>Pilih jabatan dahulu</span>':l.map(r=>`<label><input type=checkbox class=rc value="${r.id}" ${SELRA.has(r.id)?'checked':''} onchange="selRa(this)">${esc(r.nama)}</label>`).join('')||`<span class=muted>Jabatan ini belum punya rencana aksi pada tahun ${y}</span>`}
 function selRa(el){if(el.checked)SELRA.add(el.value);else SELRA.delete(el.value)}
 function saveUser(){sv('a_saveUser',{id:EID,nama:$('#f1').value,nip:$('#f2').value,password:$('#f3').value,jabatanId:$('#f4').value,ra:Array.from(SELRA)})}
 
-function pAcc(){$('#pane').innerHTML=`<h3>Ubah Username & Password Admin</h3><div style="max-width:380px"><span class=lbl>Password lama</span><input id=f1 type=password><span class=lbl>Username baru</span><input id=f2 placeholder="admin"><span class=lbl>Password baru (kosongkan jika tidak diubah)</span><input id=f3 type=password><br><br><button class=btn onclick="chAdmin()">Simpan</button></div>`}
+function pAcc(){$('#pane').innerHTML=`<h3>Ubah Username & Password Admin</h3><div style="max-width:380px"><span class=lbl>Password lama</span><input id=f1 ${PWA}><span class=lbl>Username baru</span><input id=f2 autocomplete="off" placeholder="admin"><span class=lbl>Password baru (kosongkan jika tidak diubah)</span><input id=f3 ${PWA}><br><br><button class=btn onclick="chAdmin()">Simpan</button></div>`;clearPw()}
 function chAdmin(){run(async()=>{await call('a_changeAdmin',{old:$('#f1').value,u:$('#f2').value,pass:$('#f3').value});toast('Berhasil. Silakan login ulang.',true);logout(true)})}
 
 /* ================= PENGGUNA ================= */
