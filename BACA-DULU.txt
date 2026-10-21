@@ -1,0 +1,164 @@
+=====================================================================
+ E-KINERJA - VERSI GITHUB PAGES  (BACA DULU)
+=====================================================================
+
+Aplikasi ini dibagi dua:
+  1. BACKEND  -> Google Apps Script (file Api.gs) + Google Spreadsheet
+                 sebagai database.
+  2. TAMPILAN -> GitHub Pages (file HTML, CSS, JS di repository ini).
+
+Tampilan memanggil backend lewat alamat "Web app URL" yang Anda
+tempel di file konfigurasi.js.
+
+
+---------------------------------------------------------------------
+ DAFTAR FILE
+---------------------------------------------------------------------
+ Api.gs            Backend. DITEMPEL KE GOOGLE APPS SCRIPT
+                   (bukan ke GitHub Pages).
+ BACA-DULU.txt     Petunjuk ini.
+ index.html        Halaman login.
+ admin.html        Halaman admin: Pengguna, Jabatan, Rencana Aksi,
+                   Rekap Laporan.
+ pengaturan.html   Halaman admin: ubah username & password admin.
+ pengguna.html     Halaman pengguna: Input Cepat Kinerja Harian dan
+                   rekap laporan.
+ app.css           Tampilan (warna, tabel, animasi loading).
+ app.js            Logika aplikasi (dipakai semua halaman).
+ konfigurasi.js    TEMPAT MENEMPEL Web app URL.
+
+Catatan: contoh repo Anda memiliki verifikasi.html. E-Kinerja tidak
+punya fitur verifikasi, jadi file itu tidak dibuat.
+
+
+---------------------------------------------------------------------
+ LANGKAH 1 - PASANG BACKEND DI GOOGLE APPS SCRIPT
+---------------------------------------------------------------------
+ 1. Buka https://sheets.google.com, buat Spreadsheet baru
+    (contoh nama: Database E-Kinerja).
+ 2. Di Spreadsheet klik menu Extensions > Apps Script.
+    (Harus dari dalam Spreadsheet, bukan dari script.google.com.)
+ 3. Hapus semua isi file bawaan Code.gs, lalu tempel seluruh isi
+    file Api.gs.
+ 4. Klik Save. Pilih fungsi "doGet" di bagian atas editor, klik Run,
+    lalu beri izin: Review permissions > pilih akun > Advanced >
+    Go to ... (unsafe) > Allow.
+ 5. Klik Deploy > New deployment > ikon roda gigi > Web app.
+      Execute as        : Me
+      Who has access    : Anyone
+    Klik Deploy.
+ 6. SALIN "Web app URL" (berakhiran /exec).
+
+ PENTING: jangan tempel Api.gs ke project yang sudah berisi Code.gs
+ versi lama. Kalau Anda sudah punya project lama yang berjalan, tidak
+ perlu diganti: Code.gs lama sudah punya doPost. Cukup pakai Web app
+ URL project lama itu.
+
+
+---------------------------------------------------------------------
+ LANGKAH 2 - ISI konfigurasi.js
+---------------------------------------------------------------------
+ Buka konfigurasi.js, ganti tulisan PASTE_WEB_APP_URL_DI_SINI dengan
+ Web app URL tadi (tetap di dalam tanda kutip). Hasilnya:
+
+   const API_URL = "https://script.google.com/macros/s/AKfycb.../exec";
+
+
+---------------------------------------------------------------------
+ LANGKAH 3 - UNGGAH KE GITHUB
+---------------------------------------------------------------------
+ 1. Di github.com klik + > New repository. Nama contoh: e-kinerja-gas.
+    Jangan centang "Add a README". Klik Create repository.
+ 2. Klik "uploading an existing file".
+ 3. Seret SEMUA file ke halaman itu (semua langsung di folder utama,
+    tanpa subfolder). Api.gs dan BACA-DULU.txt boleh ikut diunggah
+    sebagai arsip.
+ 4. Klik Commit changes.
+
+ Jika konfigurasi.js sudah diisi di komputer sebelum diunggah, tidak
+ perlu mengeditnya lagi di GitHub. Jika belum, buka konfigurasi.js di
+ GitHub, klik ikon pensil, isi API_URL, lalu Commit changes.
+
+
+---------------------------------------------------------------------
+ LANGKAH 4 - AKTIFKAN GITHUB PAGES
+---------------------------------------------------------------------
+ 1. Di repository buka Settings > Pages.
+ 2. Build and deployment:
+      Source  : Deploy from a branch
+      Branch  : main
+      Folder  : / (root)
+    Klik Save.
+ 3. Tunggu 1-2 menit. Alamat aplikasi:
+      https://USERNAME.github.io/NAMA-REPOSITORY/
+ 4. Tekan Ctrl+Shift+R jika halaman belum berubah.
+
+ Catatan: bila repository Private, GitHub Pages hanya tersedia pada
+ paket GitHub tertentu. Jika tidak muncul, ubah repository menjadi
+ Public (Settings > General > Danger Zone). Kode tidak berisi
+ password; data tersimpan di Spreadsheet Anda.
+
+
+---------------------------------------------------------------------
+ LANGKAH 5 - LOGIN PERTAMA
+---------------------------------------------------------------------
+ Admin    : username  admin     password  admin@123
+ -> Segera ganti di menu Pengaturan.
+ -> Isi data berurutan: Jabatan > Rencana Aksi (pilih Periode Tahun)
+    > Pengguna.
+ Pengguna : username = NIP, password = yang dibuat admin.
+
+
+---------------------------------------------------------------------
+ MEMPERBARUI APLIKASI
+---------------------------------------------------------------------
+ - Mengubah tampilan (file .html .css .js): unggah ulang file yang
+   berubah ke GitHub (Add file > Upload files), tunggu 1-2 menit,
+   lalu Ctrl+Shift+R.
+ - Mengubah backend (Api.gs): tempel ulang di Apps Script, lalu
+   Deploy > Manage deployments > ikon pensil > Version: New version >
+   Deploy. Web app URL tidak berubah.
+
+
+---------------------------------------------------------------------
+ PEMECAHAN MASALAH
+---------------------------------------------------------------------
+ "Konfigurasi belum diisi"
+    konfigurasi.js belum berisi Web app URL yang benar (harus
+    mengandung script.google.com dan berakhiran /exec).
+
+ "Tidak dapat terhubung ke server"
+    URL salah, Who has access belum "Anyone", atau belum deploy.
+    Coba buka Web app URL langsung di browser. Jika tampil tulisan
+    {"ok":true,"app":"E-Kinerja API"...} berarti backend aktif.
+
+ "Respons server tidak valid"
+    Api.gs terbaru belum di-deploy sebagai New version.
+
+ Halaman putih / tampil tulisan "Memuat aplikasi..." saja
+    Pages masih memakai file lama atau salah folder. Pastikan Folder
+    Pages = / (root) dan file ada di folder utama repository.
+    Tekan Ctrl+Shift+R.
+
+ Terlempar kembali ke halaman login
+    Sesi habis (berlaku 6 jam) atau tab ditutup. Login ulang.
+
+ Lupa password admin
+    Buka sheet "Config" di Spreadsheet, hapus baris adminUser,
+    adminPass, dan salt, lalu buka ulang aplikasi. Admin kembali ke
+    admin / admin@123. Password semua pengguna harus dibuat ulang.
+
+ Pilihan rencana aksi kosong saat input
+    Belum ada rencana aksi untuk tahun dari tanggal kegiatan. Tambahkan
+    di Admin > Rencana Aksi atau pakai tombol "Salin ke tahun baru".
+
+
+---------------------------------------------------------------------
+ KEAMANAN
+---------------------------------------------------------------------
+ - Password disimpan sebagai hash (SHA-256 + salt) di Spreadsheet.
+ - Jangan beri akses edit Spreadsheet ke pengguna biasa.
+ - Web app URL tertulis di konfigurasi.js (publik jika repository
+   Public). API tetap dilindungi login; tanpa username dan password
+   yang benar data tidak dapat dibaca.
+=====================================================================
