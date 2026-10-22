@@ -95,8 +95,8 @@ function renderUser(){const S=F.u,l=S.all?LAP:LAP.filter(r=>r.tanggal.startsWith
   l.forEach(r=>{const x=per[r.raNama]=per[r.raNama]||{n:0,m:0,rl:0};x.n++;x.m+=mins(r.mulai,r.selesai);x.rl+=(+r.realisasi||0)});
   $('#app').innerHTML=topbar(ME.nama)+`<div class=wrap><div class="card noprint"><b>${esc(ME.nama)}</b> &middot; NIP ${esc(ME.nip)}<br><span class=muted>${esc(ME.jabatan)}</span></div>
   <div class="card noprint"><div class=row><button class="btn ghost" onclick="refresh()">&#8635; Muat Ulang</button><button class=btn onclick="openQ()">+ Input Cepat Kinerja Harian</button></div><span class=chip>Total: ${fmt(tot)}</span><span class=chip>${l.length} kegiatan</span></div>
-  <div class="card noprint"><h3>Rekap per Rencana Aksi</h3><div class=tw><table><tr><th>Rencana Aksi</th><th>Jumlah Kegiatan</th><th>Total Jam</th><th>Total Realisasi</th></tr>${Object.keys(per).map(k=>`<tr><td>${esc(k)}</td><td>${per[k].n}</td><td>${fmt(per[k].m)}</td><td>${per[k].rl}</td></tr>`).join('')||'<tr><td colspan=4 class=muted>Belum ada data</td></tr>'}</table></div></div>
-  <div class=card><h3 class=noprint>Rekap Laporan</h3>${rkBar('u',LAP,false)}<div class=onlyprint><h3>Rekap Laporan Kinerja Harian</h3><div>Nama: ${esc(ME.nama)} &middot; NIP ${esc(ME.nip)}</div><div>Jabatan: ${esc(ME.jabatan)}</div><div>Periode: ${periodTxt(S)}</div></div>${rkTable(l,false,true)}</div></div><div id=mdl></div>`}
+  <div class="card noprint"><h3>Rekap per Rencana Aksi</h3><div class=tw><table><tr><th>Rencana Aksi</th><th>Jumlah Kegiatan</th><th>Total Jam</th><th>Total Realisasi</th></tr>${Object.keys(per).map(k=>`<tr><td>${esc(k)}</td><td>${per[k].n}</td><td>${fmt(per[k].m)}</td><td>${per[k].rl} Dokumen</td></tr>`).join('')||'<tr><td colspan=4 class=muted>Belum ada data</td></tr>'}</table></div></div>
+  <div class=card><h3 class=noprint>Rekap Laporan</h3>${rkBar('u',LAP,false)}<div class=onlyprint><h3>Rekap Laporan Kinerja Harian</h3><div>Nama: ${esc(ME.nama)}</div><div>${nipLbl(ME.nip)}: ${esc(ME.nip)}</div><div>Jabatan: ${esc(ME.jabatan)}</div><div>Periode: ${periodTxt(S)}</div></div>${rkTable(l,false,true)}${ttdBlock(l,{nama:ME.nama,nip:ME.nip})}</div></div><div id=mdl></div>`}
 async function delLap(id){if(!confirm('Hapus laporan ini?'))return;run(async()=>{await call('u_del',{id});LAP=await call('u_list');renderUser();toast('Laporan dihapus',true);if(MD)openQ(MD)})}
 function refresh(){run(async()=>{ME=await call('u_me');LAP=await call('u_list');renderUser();toast('Data diperbarui dari database',true)})}
 const tm=t=>mins('00:00',t);
@@ -177,6 +177,15 @@ let RK=[];
 const tgl=d=>d.slice(8,10)+'/'+d.slice(5,7)+'/'+d.slice(0,4);
 const durK=m=>{const h=Math.floor(m/60),x=m%60;return(h?h+' jam':'')+(h&&x?' ':'')+((x||!h)?x+' menit':'')};
 const periodTxt=S=>S.all?'Semua data':MN[+S.mon.slice(5,7)-1]+' '+S.mon.slice(0,4);
+const CETAK_DEF={kota:'Batusangkar',mengetahuiJabatan:'Sekretaris KPU Kab. Tanah Datar',mengetahuiNama:'Benny Rinaldo, SH',mengetahuiNip:'198501292009021004'};
+const CTK=(typeof CETAK_CFG!=='undefined'&&CETAK_CFG)?Object.assign({},CETAK_DEF,CETAK_CFG):CETAK_DEF;
+const tglPanjang=d=>(+d.slice(8,10))+' '+MN[+d.slice(5,7)-1]+' '+d.slice(0,4);
+const nipLbl=n=>(String(n).length==18&&String(n).charAt(12)=='2')?'NIPPPK':'NIP';
+function ttdBlock(rows,peg){
+  const last=rows.reduce((m,r)=>r.tanggal>m?r.tanggal:m,''),tg=tglPanjang(last||today());
+  const kiri=`<div class=ttd-k><div>Mengetahui,</div><div>${esc(CTK.mengetahuiJabatan)}</div><div class=sp></div><div class=nm>${esc(CTK.mengetahuiNama)}</div><div>NIP.${esc(CTK.mengetahuiNip)}</div></div>`;
+  const kanan=peg?`<div class=ttd-k><div>${esc(CTK.kota)}, ${tg}</div><div>Pegawai yang bersangkutan</div><div class=sp></div><div class=nm>${esc(peg.nama)}</div><div>${nipLbl(peg.nip)}.${esc(peg.nip)}</div></div>`:`<div class=ttd-k><div>${esc(CTK.kota)}, ${tg}</div></div>`;
+  return `<div class="ttd onlyprint">${kiri}${kanan}</div>`}
 function rkTable(rows,admin,edit){
   const g={};rows.forEach(r=>{const k=(admin?r.userId:'')+'|'+r.tanggal;(g[k]=g[k]||[]).push(r)});
   const gs=Object.keys(g).map(k=>g[k]);
@@ -185,7 +194,7 @@ function rkTable(rows,admin,edit){
   gs.forEach(a=>{a.sort((p,q)=>p.mulai.localeCompare(q.mulai));const n=a.length,tot=a.reduce((s,r)=>s+mins(r.mulai,r.selesai),0);
     a.forEach((r,i)=>{
       h+='<tr>'+(i==0?(admin?`<td rowspan=${n}>${esc(r.nama)}</td><td rowspan=${n}>${esc(r.jabatan)}</td>`:'')+`<td rowspan=${n}>${tgl(r.tanggal)}</td>`:'')
-      +`<td>${esc(r.raNama)}</td><td class="pre kg">${esc(r.kegiatan)}</td><td>${esc(r.realisasi||'-')}</td><td style="white-space:nowrap">${rng(r)}</td><td>${r.bukti.indexOf('http')===0?`<a href="${esc(r.bukti)}" target=_blank>Buka</a>`:'-'}</td><td style="white-space:nowrap">${durK(mins(r.mulai,r.selesai))}</td>`
+      +`<td>${esc(r.raNama)}</td><td class="pre kg">${esc(r.kegiatan)}</td><td style="white-space:nowrap">${r.realisasi?esc(r.realisasi)+' Dokumen':'-'}</td><td style="white-space:nowrap">${rng(r)}</td><td>${r.bukti.indexOf('http')===0?`<a href="${esc(r.bukti)}" target=_blank><span class=scr>Buka</span><span class=prn>${esc(r.bukti)}</span></a>`:'-'}</td><td style="white-space:nowrap">${durK(mins(r.mulai,r.selesai))}</td>`
       +(edit?`<td class=noprint style="white-space:nowrap"><button class="btn sm" onclick="openQ('${r.tanggal}','${r.id}')">Edit</button> <button class="btn sm red" onclick="delLap('${r.id}')">Hapus</button></td>`:'')
       +(i==0?`<td rowspan=${n} style="white-space:nowrap">${fmt(tot)}</td>`:'')+'</tr>'})});
   if(!gs.length)h+=`<tr><td colspan=${admin?10:edit?9:8} class=muted>Belum ada laporan pada periode ini</td></tr>`;
@@ -204,7 +213,8 @@ function setF(k,t,v){const S=F[k];
 function goTab(k){TAB=k;EID='';history.replaceState(null,'','#'+k);if(k=='rk')loadRk();else renderAdmin()}
 async function loadRk(){await run(async()=>{RK=await call('a_rekap');renderAdmin()})}
 function pRk(){const S=F.a;let rows=RK;if(!S.all)rows=rows.filter(r=>r.tanggal.startsWith(S.mon));if(S.nama)rows=rows.filter(r=>r.userId==S.nama);
-  const nm=S.nama?(D.usr.find(u=>u.id==S.nama)||{}).nama:'Semua Pengguna';
-  $('#pane').innerHTML=`<h3 class=noprint>Rekap Laporan</h3>${rkBar('a',RK,true)}<div class=onlyprint><h3>Rekap Laporan Kinerja Harian</h3><div>Nama: ${esc(nm)}</div><div>Periode: ${periodTxt(S)}</div></div>${rkTable(rows,true,false)}`}
+  const u=S.nama?D.usr.find(x=>x.id==S.nama):null;
+  const head=u?`<div>Nama: ${esc(u.nama)}</div><div>${nipLbl(u.nip)}: ${esc(u.nip)}</div><div>Jabatan: ${esc(jn(u.jabatanId))}</div>`:'<div>Nama: Semua Pengguna</div>';
+  $('#pane').innerHTML=`<h3 class=noprint>Rekap Laporan</h3>${rkBar('a',RK,true)}<div class=onlyprint><h3>Rekap Laporan Kinerja Harian</h3>${head}<div>Periode: ${periodTxt(S)}</div></div>${rkTable(rows,true,false)}${ttdBlock(rows,u)}`}
 if(typeof API_URL==='undefined'||API_URL.indexOf('script.google.com')<0){$('#app').innerHTML='<div class="boot"><b>Konfigurasi belum diisi</b><div>Buka file konfigurasi.js lalu isi API_URL dengan Web app URL dari Apps Script (berakhiran /exec).</div></div>'}
 else({login:initLogin,admin:initAdmin,user:initUser,setting:initSetting})[PAGE]();
