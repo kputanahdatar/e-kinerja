@@ -80,7 +80,7 @@ function pUsr(){const e=D.usr.find(u=>u.id==EID)||{ra:[]};
   <b style="font-size:14px">Rencana Aksi (boleh lebih dari satu)</b><div class=chk id=rach></div>
   <div class=muted style="font-size:12px;margin-bottom:10px">Pilihan tersimpan untuk semua tahun. Jika pada suatu tahun tidak ada yang dicentang, pengguna otomatis mendapat semua rencana aksi jabatannya pada tahun itu.</div>
   <button class=btn onclick="saveUser()">Simpan</button> ${EID?cancel:''}
-  <div class=tw style="margin-top:16px"><table><tr><th>Nama</th><th>NIP</th><th>Jabatan</th><th>Rencana Aksi</th><th width=150>Aksi</th></tr>${D.usr.map(u=>`<tr><td>${esc(u.nama)}</td><td>${esc(u.nip)}</td><td>${esc(jn(u.jabatanId))}</td><td>${u.ra.map(i=>esc(rnn(i))).filter(Boolean).join('<br>')||'-'}</td><td><button class="btn sm" onclick="EID='${u.id}';renderAdmin()">Edit</button> <button class="btn sm red" onclick="confirm('Hapus pengguna beserta laporannya?')&&sv('a_delUser',{id:'${u.id}'})">Hapus</button></td></tr>`).join('')||'<tr><td colspan=5 class=muted>Belum ada pengguna</td></tr>'}</table></div>`;
+  <div class=tw style="margin-top:16px"><table><tr><th>Nama</th><th>NIP/NIPPK</th><th>Jabatan</th><th>Rencana Aksi</th><th width=150>Aksi</th></tr>${D.usr.map(u=>`<tr><td>${esc(u.nama)}</td><td>${esc(u.nip)}</td><td>${esc(jn(u.jabatanId))}</td><td>${u.ra.map(i=>esc(rnn(i))).filter(Boolean).join('<br>')||'-'}</td><td><button class="btn sm" onclick="EID='${u.id}';renderAdmin()">Edit</button> <button class="btn sm red" onclick="confirm('Hapus pengguna beserta laporannya?')&&sv('a_delUser',{id:'${u.id}'})">Hapus</button></td></tr>`).join('')||'<tr><td colspan=5 class=muted>Belum ada pengguna</td></tr>'}</table></div>`;
   SELRA=new Set(e.ra);drawRa();clearPw()}
 function drawRa(){const j=$('#f4').value,y=$('#f5').value,l=D.ra.filter(r=>r.jabatanId==j&&r.tahun==y);
   $('#rach').innerHTML=!j?'<span class=muted>Pilih jabatan dahulu</span>':l.map(r=>`<label><input type=checkbox class=rc value="${r.id}" ${SELRA.has(r.id)?'checked':''} onchange="selRa(this)">${esc(r.nama)}</label>`).join('')||`<span class=muted>Jabatan ini belum punya rencana aksi pada tahun ${y}</span>`}
@@ -184,7 +184,7 @@ const nipLbl=n=>(String(n).length==18&&String(n).charAt(12)=='2')?'NIPPPK':'NIP'
 function ttdBlock(rows,peg){
   const last=rows.reduce((m,r)=>r.tanggal>m?r.tanggal:m,''),tg=tglPanjang(last||today());
   const kiri=`<div class=ttd-k><div>Mengetahui,</div><div>${esc(CTK.mengetahuiJabatan)}</div><div class=sp></div><div class=nm>${esc(CTK.mengetahuiNama)}</div><div>NIP.${esc(CTK.mengetahuiNip)}</div></div>`;
-  const kanan=peg?`<div class=ttd-k><div>${esc(CTK.kota)}, ${tg}</div><div>Pegawai yang bersangkutan</div><div class=sp></div><div class=nm>${esc(peg.nama)}</div><div>${nipLbl(peg.nip)}.${esc(peg.nip)}</div></div>`:`<div class=ttd-k><div>${esc(CTK.kota)}, ${tg}</div></div>`;
+  const kanan=peg?`<div class=ttd-k><div>${esc(CTK.kota)}, ${tg}</div><div>Pegawai yang bersangkutan</div><div class=sp></div><div class=nm>${esc(peg.nama)}</div><div>NIP/NIPPPK.${esc(peg.nip)}</div></div>`:`<div class=ttd-k><div>${esc(CTK.kota)}, ${tg}</div></div>`;
   return `<div class="ttd onlyprint">${kiri}${kanan}</div>`}
 function rkTable(rows,admin,edit){
   const g={};rows.forEach(r=>{const k=(admin?r.userId:'')+'|'+r.tanggal;(g[k]=g[k]||[]).push(r)});
