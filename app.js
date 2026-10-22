@@ -215,6 +215,6 @@ async function loadRk(){await run(async()=>{RK=await call('a_rekap');renderAdmin
 function pRk(){const S=F.a;let rows=RK;if(!S.all)rows=rows.filter(r=>r.tanggal.startsWith(S.mon));if(S.nama)rows=rows.filter(r=>r.userId==S.nama);
   const u=S.nama?D.usr.find(x=>x.id==S.nama):null;
   const head=u?`<div>Nama: ${esc(u.nama)}</div><div>${nipLbl(u.nip)}: ${esc(u.nip)}</div><div>Jabatan: ${esc(jn(u.jabatanId))}</div>`:'<div>Nama: Semua Pengguna</div>';
-  $('#pane').innerHTML=`<h3 class=noprint>Rekap Laporan</h3>${rkBar('a',RK,true)}<div class=onlyprint><h3>Rekap Laporan Kinerja Harian</h3>${head}<div>Periode: ${periodTxt(S)}</div></div>${rkTable(rows,true,false)}${ttdBlock(rows,u)}`}
+  $('#pane').innerHTML=`<h3 class=noprint>Rekap Laporan</h3>${rkBar('a',RK,true)}<div class=onlyprint><h3>Rekap Laporan Kinerja Harian</h3>${head}<div>Periode: ${periodTxt(S)}</div></div>${rkTable(rows,!u,false)}${ttdBlock(rows,u)}`;$('#pane').classList.toggle('wide-print',!u)}
 if(typeof API_URL==='undefined'||API_URL.indexOf('script.google.com')<0){$('#app').innerHTML='<div class="boot"><b>Konfigurasi belum diisi</b><div>Buka file konfigurasi.js lalu isi API_URL dengan Web app URL dari Apps Script (berakhiran /exec).</div></div>'}
 else({login:initLogin,admin:initAdmin,user:initUser,setting:initSetting})[PAGE]();
